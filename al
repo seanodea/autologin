@@ -108,8 +108,10 @@ class Login():
 			argn = args[1:]
 			revargs = argn[::-1]
 			self.serverID = revargs[0].lower()
-		except:
-			pass
+		except IndexError, e:
+			self.eWarn('Error with with args')
+			sys.exit(7)
+
 		self.collectServerInfo(self.serverID)
 		if not os.path.isdir(home + settings['logDir']): os.mkdir(home + settings['logDir'])
 		self.logFile = home + settings['logDir'] + '/' + str(self.serverID) + '.log'		# Set the log for all transactions'''
@@ -295,28 +297,28 @@ class Login():
 			if not self.options.port:
 				while self.host['port'] is None:
 					try:
-						self.host['port'] = self.options.port if self.options.port else int(raw_input('Enter port for ' + serverID +'[22]: ') or '22')
+						self.host['port'] = self.options.port if self.options.port else int(raw_input('Enter port for ' + self.serverID +'[22]: ') or '22')
 					except:
 						print "Lets try that again, please enter a number."
-						self.host['port'] = self.options.port if self.options.port else int(raw_input('Enter port for ' + serverID +'[22]: ') or '22')
+						self.host['port'] = self.options.port if self.options.port else int(raw_input('Enter port for ' + self.serverID +'[22]: ') or '22')
 			else:
 				self.host['port'] = self.options.port
 			if not self.host['port']:
 				self.host['port'] = 22
 
-			self.host['username'] = self.options.user if self.options.user else raw_input('Enter the user for ' + serverID +': ')
-			self.host['password'] = self.options.password if self.options.password else raw_input('Enter the password ONLY ONCE for ' + serverID +': ')
+			self.host['username'] = self.options.user if self.options.user else raw_input('Enter the user for ' + self.serverID +': ')
+			self.host['password'] = self.options.password if self.options.password else raw_input('Enter the password ONLY ONCE for ' + self.serverID +': ')
 			# encrypt
 			public_key = key.publickey()
 			enc_data = public_key.encrypt(self.host['password'], 32)
 			self.host['password'] = enc_data
 
 			self.host['sudopw'] = raw_input('Use a password after sudo [(on)/off]?: ')
-			self.host['gw'] = raw_input('Enter the gateway through which we connect to ' + serverID + '[Blank for none]')
-			self.host['gwtype'] = raw_input('RDP or ssh gateway?' + serverID + '[SSH/win]')
+			self.host['gw'] = raw_input('Enter the gateway through which we connect to ' + self.serverID + '[Blank for none]')
+			self.host['gwtype'] = raw_input('RDP or ssh gateway?' + self.serverID + '[SSH/win]')
 
 			if self.host['gwtype'] == '':
-				self.host['gw'] = 'ssh'
+				self.host['gwtype'] = 'ssh'
 		except KeyboardInterrupt, e:
 			sys.exit(0)
 
@@ -324,13 +326,13 @@ class Login():
 			self.host['sudopw'] = False
 		else:
 			self.host['sudopw'] = True
-		self.host['hostname'] = serverID
+		self.host['hostname'] = self.serverID
 		self.host['gw'] = ''
 		self.host['sudo'] = True
 
-		with open(confdir + "/" + serverID + ".yaml", 'w') as outfile:
+		with open(confdir + "/" + self.serverID + ".yaml", 'w') as outfile:
 			yaml.dump(self.host, outfile, default_flow_style=False)
-		print "Wrote to " + confdir + "/" + serverID + ".yaml" + ", have a look. Try running al " + self.host['hostname'] + " to login automatically."
+		print "Wrote to " + confdir + "/" + self.serverID + ".yaml" + ", have a look. Try running al " + self.host['hostname'] + " to login automatically."
 		sys.exit(0)
 
 	def session(self, mode=''):
