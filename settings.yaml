@@ -1,0 +1,31 @@
+#Basic autologin settings go here, especially things that don't make sense as an option flag
+---
+loginTimeout: 5
+sessionTimeout: 30
+altHomeDir: ''
+pressEnterToExit: 1     # 0: No, don't pause because I'm not fireing this off in a console that opens and closes on its own, 1: Yes, pause so window doesn't close before errors are printed
+logMode: 'w'
+logDir: '/.al.logs'
+sshKeyFile: '~/.ssh/id_rsa.key'
+sshPubKeyFile: '~/.ssh/id_rsa.pub'
+sudo: True
+hidepw: True
+ehlo: > # you can remove all of this, we have a default
+  export OLDHISTSIZE=$HISTSIZE;export OLDHISTFILE=$HISTFILE;export HISTFILE=/dev/null;export HISTSIZE=0;export HISTIGNORE="export*:*if*:*fi*:*echo*:*df*:*sar*:*alias*:*function*";
+  if [ `/usr/bin/env basename $SHELL` = "bash" ]; then
+    export HISTTIMEFORMAT="%Y-%m-%d_%H:%M:%S ";
+    alias nano='nano -w';alias grep='grep --color';alias egrep='egrep --color=auto';
+    function samplefunc { echo this is a sample function.
+    };
+    service --status-all 2>&1 | egrep "apache|postfix|sendmail";
+    df -h | egrep -v "boot|none" | awk '{print $6" "$5}' | grep % | grep -v Avail;
+    sar -r | tail | grep Average | awk '{print "mem avg: "$4"%"}';
+    sar -q | tail | grep Average | awk '{print "load: procs: "$3" one: "$4" five: "$5" fifteen: "$6}';
+    echo eh""lo;
+    export HISTSIZE=$OLDHISTSIZE
+    history -r;
+  else
+    set -o emacs; bind ^i=complete;echo eh""lo;
+    export HISTSIZE=$OLDHISTSIZE
+    export HISTFILE=$OLDHISTFILE
+  fi;
