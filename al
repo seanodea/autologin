@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 ''' al.py
-(c) 2015 * rights reserved IGT
-Author: Chris Godwin <christopher.godwin@igt.com>
+Licsense: BSD 3.0
+Author: Chris Godwin <seanodea@github.com>
 
 This is to soften the login process to linux servers.
 Will be linux centric, but will seek to run on Windows
