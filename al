@@ -16,6 +16,7 @@ import re
 import sys
 import shutil
 import yaml
+import getpass
 from Crypto.PublicKey import RSA
 from Crypto import Random
 from os.path import expanduser
@@ -307,7 +308,7 @@ class Login():
 				self.host['port'] = 22
 
 			self.host['username'] = self.options.user if self.options.user else raw_input('Enter the user for ' + self.serverID +': ')
-			self.host['password'] = self.options.password if self.options.password else raw_input('Enter the password ONLY ONCE for ' + self.serverID +': ')
+			self.host['password'] = self.options.password if self.options.password else getpass.getpass('Enter the password for ' + self.serverID +': ')
 			# encrypt
 			public_key = key.publickey()
 			enc_data = public_key.encrypt(self.host['password'], 32)
