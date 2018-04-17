@@ -328,7 +328,11 @@ class Login():
 		else:
 			self.host['sudopw'] = True
 		self.host['hostname'] = self.serverID
-		self.host['gw'] = ''
+		try:
+			if self.host['gw'] == '':
+				self.host['gw'] = ''
+		except KeyError, e:
+			self.host['gw'] = ''
 		self.host['sudo'] = True
 
 		with open(confdir + "/" + self.serverID + ".yaml", 'w') as outfile:
@@ -434,7 +438,7 @@ class Login():
 		def changePassword():
 			''' This method will send the user or admin password depending on the order which it is called. '''
 			try:
-                        	answer = raw_input("Enter a new password:")
+                        	answer = getpass.getpass("Enter a new password:")
 				plainpw = answer.replace('/n','')
 				try:
 					self.p.sendline(plainpw)
@@ -442,18 +446,18 @@ class Login():
 				except:
 					pass
 				changeMe = raw_input("Change stored password for " + self.host['username'] + "[y/N]:")
-				self.host['password'] = plainpw
 	                        # encrypt
         	                public_key = key.publickey()
                 	        enc_data = public_key.encrypt(plainpw, 32)
                         	self.host['password'] = enc_data
+				self.connectto['password'] = enc_data
 				if changeMe=="Y" or changeMe=="y":
 					with open(confdir + "/" + self.serverID + ".yaml", 'w') as outfile:
-						yaml.dump(self.host, outfile, default_flow_style=False)
+						yaml.dump(self.connectto, outfile, default_flow_style=False)
 					print "Wrote to " + confdir + "/" + self.serverID + ".yaml" + ", have a look. Try running `al " + self.serverID + "' to login automatically."
 					sys.exit(0)
 				else:
-					print "Exiting. Change your pw manually."
+					print "Exiting. Change your pw manually with eyaml edit."
 					sys.exit(5)
                 	except KeyboardInterrupt:
                         	sys.exit(0)
