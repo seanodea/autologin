@@ -434,7 +434,8 @@ class Login():
 						self.isSuper = True
 					return True
 			except:
-				pass
+				self.host['sudopw'] == True
+				return False
 		def changePassword():
 			''' This method will send the user or admin password depending on the order which it is called. '''
 			try:

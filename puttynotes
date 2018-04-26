@@ -1,0 +1,4 @@
+-ssh
+-P 22
+-pw password
+user@host
