@@ -174,7 +174,7 @@ class Login():
 		self.sshPubKeyFile = options.pub_key_file
 		self.sshKeyFile = options.key_file
 		self.useSSHKey = self.copy_key
-		self.host['password'] = options.password
+		self.prepass = options.password
 
 		if options.delete_server:
 			return (options, args)
@@ -209,6 +209,7 @@ class Login():
 		self.mode			= 'conn'
 		self.timeoutcount		= 0
 		self.ehlosent			= False
+		self.prepass			= False
 	def printUsageOrMenu(self, args):
 		''' Print proper usage and exit. '''
 		print "run al -h"
@@ -224,7 +225,7 @@ class Login():
 		t.padding_width = 1 # One space between column edges and contents (default)
 		onlyfiles = [f for f in listdir(confdir) if isfile(join(confdir, f))]
 		onlyfiles.remove(keyFile)
-		self.eInfo('Accessing host configs')
+		#self.eInfo('Accessing host configs')
 		for file in onlyfiles:
 			with open(confdir + "/" + file, 'r') as yamlstream:
 				try:
@@ -236,16 +237,16 @@ class Login():
 
 					hosttag = file.replace('.yaml','')
 					if self.host['gw']:
-						gwString = self.host['gw']
+						gwString = str(self.host['gw'])
 					else:
 						gwString = "none"
-					t.add_row([hosttag, self.host['ip'],self.host['username'],self.host['password'],gwString])
+					t.add_row([str(hosttag), str(self.host['ip']),str(self.host['username']),str(self.host['password']),str(gwString)])
 				except yaml.YAMLError as exc:
-					print(exc)
+					pass #print(exc)
 				except KeyError, e:
 					pass
 				except TypeError, e:
-					self.eWarn('Error with file: ' + file)
+					#self.eWarn('Error with file: ' + file)
 					pass
 		print t
 		sys.exit(0)
@@ -344,8 +345,8 @@ class Login():
 		''' This begins the expect/ssh session. It also listens for any of the expected text. '''
 		import pexpect
 
-		cmd = '/usr/bin/ssh'
-		cmdArgs = ['-o','NumberOfPasswordPrompts=1','-o','StrictHostKeyChecking=no','-o','UserKnownHostsFile=/dev/null','-l',self.host['username'], self.host['ip'],'-p', str(self.host['port'])]
+		cmd = '/usr/bin/sshpass'
+		cmdArgs = ['-p',str(self.host['password']),'/usr/bin/ssh','-o','NumberOfPasswordPrompts=1','-o','StrictHostKeyChecking=no','-o','UserKnownHostsFile=/dev/null','-l',self.host['username'], self.host['ip'],'-p', str(self.host['port'])]
 		if self.useSSHKey:
 			cmdArgs.append('-i')
 			cmdArgs.append(self.sshKeyFile)
@@ -366,7 +367,6 @@ class Login():
 			try:
 				self.eDebug(message)
 				p = self.p
-				#p.sendcontrol('l')
 				p.interact()
 				p.close()
 				sys.exit(0)
@@ -384,7 +384,7 @@ class Login():
 					print "Then run `putty.exe --username " + self.connectto['username'] +" --password " + self.connectto['password'] + "--server " + str(self.connectto['ip'] + "'")
 					sys.exit(0)
 				if self.gwlogin != 2:
-	                        	self.cmdSSH = 'ssh -o NumberOfPasswordPrompts=1 -o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -l ' + self.connectto['username'] + ' ' + str(self.connectto['ip']) + ' -p ' + str(self.connectto['port']) + '; exit'
+	                        	self.cmdSSH = 'sshpass -p ' + self.connectto['password'] + ' ssh -o NumberOfPasswordPrompts=1 -o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -l ' + self.connectto['username'] + ' ' + str(self.connectto['ip']) + ' -p ' + str(self.connectto['port']) + '; exit'
 					self.cmdMSTSC = '/cygdrive/c/windows/system32/mstsc.exe'
 					self.eDebug('Logged into gw, issueing command: ' + self.cmdSSH) 
 					self.p.sendline(self.cmdSSH)
@@ -399,6 +399,7 @@ class Login():
 		def setUpSession():
 			''' This detects shell prompts and issues instruction based on the result. '''
 
+			becomeSudo()
 			if self.command:
 				self.eDebug('[Command Mode] Issueing command: ' + self.command) 
 				self.p.sendline(self.command + '; exit')
@@ -414,7 +415,7 @@ class Login():
 				if self.gwlogin != 2:
 					self.p.sendline(self.host['password'])
 					self.eDebug('sending '+self.host['password'])
-					if ((self.options.nosudo == False and self.host['sudo'] != False) and self.host['username']!='root' and self.host['username']!='prosys') and self.isSuper == False and (self.connectto['gw'] == ''):
+					if ((self.options.nosudo == False and self.host['sudo'] == True) and self.host['username']!='root' and self.host['username']!='prosys') and self.isSuper == False and (self.connectto['gw'] == ''):
 						self.eDebug('Becoming superuser on host.')
 						self.p.sendline('sudo su -')
 						if self.host['sudopw'] == True:
@@ -436,17 +437,43 @@ class Login():
 			except:
 				self.host['sudopw'] = True
 				return False
+		def becomeSudo():
+			try:
+				if self.gwlogin != 2:
+					if ((self.options.nosudo == False and self.host['sudo'] == True) and self.host['username']!='root' and self.host['username']!='prosys') and self.isSuper == False and (self.connectto['gw'] == ''):
+						self.eDebug('Becoming superuser on host.')
+						self.p.sendline('sudo su -')
+						if self.host['sudopw'] == True:
+							self.p.sendline(self.host['password'])
+							self.eDebug('sending '+self.host['password'])
+						self.isSuper = True
+					return True
+				else:
+					if self.connectto['sudo'] == True and self.options.nosudo == False and self.connectto['username']!='root' and self.connectto['username']!='prosys' and self.isSuper == False and (self.connectto['gw'] == '' or self.gwlogin == 2):
+						self.eDebug('Becoming superuser host beyond gateway.')
+						self.p.sendline('sudo su -')
+						if self.connectto['sudopw'] == True:
+							self.p.sendline(self.connectto['password'])
+							self.eDebug('sending '+self.connectto['password'])
+						self.isSuper = True
+					return True
+			except:
+				self.host['sudopw'] = True
+				return False
 		def changePassword():
 			''' This method will send the user or admin password depending on the order which it is called. '''
 			try:
-                        	answer = getpass.getpass("Enter a new password:")
-				plainpw = answer.replace('/n','')
+                        	if not self.prepass:
+					answer = getpass.getpass("Enter a new password:")
+					plainpw = answer.replace('/n','')
+				else:
+					plainpw = self.prepass
 				try:
 					self.p.sendline(plainpw)
 					self.p.sendline(plainpw)
 				except:
 					pass
-				changeMe = raw_input("Change stored password for " + self.host['username'] + "[y/N]:")
+				changeMe = 'y' #raw_input("Change stored password for " + self.host['username'] + "[y/N]:")
 	                        # encrypt
         	                public_key = key.publickey()
                 	        enc_data = public_key.encrypt(plainpw, 32)
@@ -541,8 +568,9 @@ class Login():
 				11			: foundPrompt, # host through gw
 				12			: foundPrompt, # prosys ksh user
 				13			: lambda: self.p.sendline(self.host['passphrase']), 
-				14			: userInteract,
-				17			: userInteract,
+				14			: lambda: userInteract(''),
+				16			: sendEhlo,
+				17			: lambda: userInteract(''),
 				None			: lambda: self.eDebug('Breakout case.',True)
 				}
 				
