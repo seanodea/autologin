@@ -316,6 +316,7 @@ class Login():
 			self.host['sudopw'] = raw_input('Use a password after sudo [(on)/off]?: ')
 			self.host['gw'] = raw_input('Enter the gateway through which we connect to ' + self.serverID + '[Blank for none]')
 			self.host['gwtype'] = raw_input('RDP or ssh gateway?' + self.serverID + '[SSH/win]')
+			self.host['gwtype'] = raw_input('Run any commands upon login?:')
 
 			if self.host['gwtype'] == '':
 				self.host['gwtype'] = 'ssh'
@@ -362,6 +363,7 @@ class Login():
 				self.eDebug(message)
 				p = self.p
 				#p.sendcontrol('l')
+				self.p.sendline(self.host['initcommand'])
 				p.interact()
 				p.close()
 				sys.exit(0)
