@@ -1,7 +1,11 @@
 # Autologin - By @seanodea
 ## BSD 3.0 Liscense Copyright 2015-2017 Chris Godwin
 
+# Automaticall Manages Interactive Logins
+## Manages encrypted credentials
+## Connects directly or Tunnels thru SSH Gateways
 Autologin can do the following:
+* Handles window resizing
 * Automatically log in via ssh
 * Run a command on a remote system and return the output (great with for loops!)
 * Run a command on several systems with al_multi command.
