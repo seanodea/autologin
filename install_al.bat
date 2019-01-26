@@ -10,6 +10,7 @@ set /p DUMMY= When Conemu stops, choose 64bit version, press enter...
 echo Installing Cygwin Automatically
 START /WAIT setup-x86_64.exe ^
 --packages ^
+sshpass,^
 bind-utils,^
 git,^
 git-cvs,^
@@ -31,6 +32,7 @@ python-pynotify,^
 python-setuptools,^
 python-vte,^
 python-xdg,^
+python-pip,^
 python3,^
 rsync,^
 ruby,^
