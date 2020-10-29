@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 ''' al.py
 Licsense: BSD 3.0
 Author: Chris Godwin <seanodea@github.com>
@@ -39,7 +39,7 @@ except:
 
 with open(confdir + "/settings.yaml", 'r') as yamlstream:
     try:
-	settings = yaml.load(yamlstream)
+        settings = yaml.load(yamlstream)
     except yaml.YAMLError as exc:
         print(exc)
 
